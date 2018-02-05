@@ -1,0 +1,39 @@
+language: bash
+
+sudo: required
+dist: trusty
+
+notifications:
+  email:
+    on_success: never
+    on_failure: never
+
+git:
+  depth: false
+
+services:
+  - docker
+
+env:
+  global:
+    - REPO: $TRAVIS_REPO_SLUG
+    - VERSION: $TRAVIS_TAG
+    - N_MAKE_JOBS: 2
+
+before_deploy:
+  - >
+    sudo -E apt-get -yq update;
+    sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install docker-ce=${DOCKER_VERSION}*;
+    docker version;
+    curl -sI https://github.com/containous/structor/releases/latest | grep -Fi Location  | tr -d '\r' | sed "s/tag/download/g" | awk -F " " '{ print $2 "/structor_linux-amd64"}' | wget --output-document=$GOPATH/bin/structor -i -;
+    chmod +x $GOPATH/bin/structor;
+    structor -o mmatur --repo-name="structor-sample" --dockerfile-url="https://raw.githubusercontent.com/mmatur/structor-sample/master/docs.Dockerfile" --menu.js-url="https://raw.githubusercontent.com/mmatur/structor-sample/master/structor-menu.js.gotmpl" --exp-branch=master --debug;
+deploy:
+  - provider: pages
+    edge: true
+    github_token: ${GITHUB_TOKEN}
+    local_dir: site
+    skip_cleanup: true
+    on:
+      repo: mmatur/structor-sample
+      all_branches: true
