@@ -1,1 +1,1 @@
-Mesor Structor v1.0.1
+Mesor Structor v1.1.0
